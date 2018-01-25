@@ -13,8 +13,4 @@ public class UploadClientTest {
     @Autowired
     private UploadClient client;
 
-    @Test
-    public void test(){
-        System.out.println(client.test());
-    }
 }
