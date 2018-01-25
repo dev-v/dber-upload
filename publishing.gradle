@@ -1,0 +1,22 @@
+apply plugin: 'maven'
+apply plugin: 'maven-publish'  
+
+def isSnapshot = "${project.version}"?.endsWith("-SNAPSHOT")
+
+def uploadUrl='http://192.168.120.3:8081/nexus/repository/dber/'
+
+uploadArchives {  
+    repositories {  
+        mavenDeployer {  
+            repository(
+            	url : uploadUrl
+            ){  
+                authentication(userName: "admin", password:"admin123")  
+            }  
+            pom.project {  
+                groupId "$project_group"  
+                version "${project_version}"  
+            }  
+        }  
+    }  
+}

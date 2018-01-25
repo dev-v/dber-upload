@@ -1,0 +1,16 @@
+rootProject.name = 'dber-upload'
+
+includeFlat 'fastjson'
+
+includeFlat 'dber-tool'
+
+includeFlat 'dber-base-api'
+
+includeFlat 'dber-base-service'
+
+includeFlat 'dber-plat'
+include ':dber-plat:dber-plat-api'
+
+include 'dber-upload-api'
+
+include 'dber-upload-service'

@@ -1,0 +1,193 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dber.upload.mapper.IDfileErrorMapper">
+
+    <select id="get" resultType="DfileError">
+		select * from dfile_error where id=#{id}
+	</select>
+
+    <delete id="del">
+		delete from dfile_error where id = #{id}
+	</delete>
+
+    <select id="gets" resultType="DfileError">
+        SELECT * FROM dfile_error WHERE id IN
+        <foreach item="item" index="index" collection="array" open="("
+                 separator="," close=")">#{item}
+        </foreach>
+    </select>
+
+    <sql id="maxLimit">
+		limit 1000
+	</sql>
+
+    <delete id="dels">
+        delete from dfile_error where id in
+        <foreach item="item" index="index" collection="array" open="("
+                 separator="," close=")">#{item}
+        </foreach>
+        <include refid="maxLimit"></include>
+    </delete>
+
+    <delete id="delByCondition">
+        delete from dfile_error
+        <include refid="where"></include>
+    </delete>
+
+    <sql id="insertList">
+		(
+		<trim suffixOverrides=",">
+			<if test="id!=null">
+				id,
+			</if>
+			<if test="bsId!=null">
+				bs_id,
+			</if>
+			<if test="type!=null">
+				_type,
+			</if>
+			<if test="sfname!=null">
+				sfname,
+			</if>
+			<if test="status!=null">
+				_status,
+			</if>
+			<if test="errorType!=null">
+				_error_type,
+			</if>
+		</trim>
+		) values (
+		<trim suffixOverrides=",">
+			<if test="id!=null">
+				#{id},
+			</if>
+			<if test="bsId!=null">
+				#{bsId},
+			</if>
+			<if test="type!=null">
+				#{type},
+			</if>
+			<if test="sfname!=null">
+				#{sfname},
+			</if>
+			<if test="status!=null">
+				#{status},
+			</if>
+			<if test="errorType!=null">
+				#{errorType},
+			</if>
+		</trim>
+
+		)
+	</sql>
+
+    <!-- 注意检查非空和主键自增属性 -->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert
+        into dfile_error
+        <include refid="insertList"></include>
+    </insert>
+
+    <update id="update">
+        update dfile_error
+        <set>
+            			<if test="bsId != null ">
+				bs_id=#{bsId},
+			</if>
+			<if test="type != null ">
+				_type=#{type},
+			</if>
+			<if test="sfname != null ">
+				sfname=#{sfname},
+			</if>
+			<if test="status != null ">
+				_status=#{status},
+			</if>
+			<if test="errorType != null ">
+				_error_type=#{errorType},
+			</if>
+
+        </set>
+        where id = #{id}
+    </update>
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        <!-- 不包含数据库类型为TIMESTAMP（由数据库自动管理）的列 -->
+        insert into dfile_error
+        <include refid="insertList"></include>
+        ON DUPLICATE KEY
+        UPDATE
+        <trim suffixOverrides=",">
+            			<if test="bsId != null ">
+				bs_id=values(bs_id),
+			</if>
+			<if test="type != null ">
+				_type=values(_type),
+			</if>
+			<if test="sfname != null ">
+				sfname=values(sfname),
+			</if>
+			<if test="status != null ">
+				_status=values(_status),
+			</if>
+			<if test="errorType != null ">
+				_error_type=values(_error_type),
+			</if>
+
+        </trim>
+    </insert>
+
+    <sql id="queryList">
+		select id,bs_id,_type,sfname,_status,_error_type from
+		dfile_error
+	</sql>
+
+    <sql id="where">
+        <trim prefix="WHERE" prefixOverrides="AND">
+            			<if test="id != null">
+				AND id=#{id}
+			</if>
+			<if test="bsId != null">
+				AND bs_id=#{bsId}
+			</if>
+			<if test="type != null">
+				AND _type=#{type}
+			</if>
+			<if test="sfname != null">
+				AND sfname=#{sfname}
+			</if>
+			<if test="status != null">
+				AND _status=#{status}
+			</if>
+			<if test="errorType != null">
+				AND _error_type=#{errorType}
+			</if>
+
+        </trim>
+    </sql>
+
+    <select id="query" resultType="DfileError">
+        <include refid="queryList"></include>
+        <include refid="where"></include>
+    </select>
+
+    <select id="queryWithoutPage" resultType="DfileError">
+        <include refid="queryList"></include>
+        <include refid="where"></include>
+        <include refid="maxLimit"></include>
+    </select>
+
+    <select id="queryOne" resultType="DfileError">
+        select * from dfile_error
+        <include refid="where"></include>
+        limit 1
+    </select>
+
+    <select id="getIds" resultType="long">
+        select id from dfile_error
+        <include refid="where"></include>
+        <include refid="maxLimit"></include>
+    </select>
+
+</mapper>

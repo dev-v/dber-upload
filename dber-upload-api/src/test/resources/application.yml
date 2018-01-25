@@ -1,0 +1,30 @@
+spring:
+  profiles:
+    active:
+      - dev
+
+logging:
+  path: logs
+
+---
+spring:
+  profiles: dev
+
+  redis:
+    host: 192.168.120.3
+    port: 6379
+    database: 0
+    pool:
+      min-idle: 2
+
+dber:
+  auth:
+#      获取权限
+    obtain:
+      plat: 123
+      bill: 123
+      shop: 123
+      customer: 123
+      coacher: 123
+  service:
+    name: upload

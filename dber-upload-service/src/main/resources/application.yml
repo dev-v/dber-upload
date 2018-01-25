@@ -1,0 +1,59 @@
+spring:
+  profiles:
+    active:
+      - dev
+
+logging:
+  path: logs
+server:
+  port: 8100
+
+---
+spring:
+  profiles: dev
+  redis:
+    host: 192.168.120.3
+    port: 6379
+    database: 0
+    pool:
+      min-idle: 2
+
+dber:
+  upload:
+    uploadExpireSeconds: 600
+    downloadExpireSeconds: 3600
+    tokenMaxSize: 10000
+    callbackUrl: upload.ngrok.xiaomiqiu.cn/pub/callback
+    auth:
+      accessKey: cdeEeDCOPy4g9xmW-DGrMvI0EZymZ324Kts9Wx6A
+      secretKey: V_fg6QV4tttDK3W0Cl4AUHcU4fsMQ4DwpGSsQBzg
+    bucket:
+      imge: p31z7ux9b.bkt.clouddn.com
+      imgePrivate: p320trfbx.bkt.clouddn.com
+  auth:
+#   授予权限
+    grant:
+      plat: 123
+      bill: 123
+      shop: 123
+      customer: 123
+      coacher: 123
+#      获取权限
+    obtain:
+      plat: 123
+      bill: 123
+      shop: 123
+      customer: 123
+      coacher: 123
+  service:
+    name: upload
+    database:
+      host: 192.168.120.3
+      port: 3306
+      database: dber_plat
+      username: root
+      password: 123456
+      parameters: characterEncoding=utf8&rewriteBatchedStatements=true&autoReconnect=true
+      initialSize: 1
+      maxActive: 2
+      minIdle: 1
