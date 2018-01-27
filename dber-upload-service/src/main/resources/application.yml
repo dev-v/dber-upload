@@ -23,13 +23,19 @@ dber:
     uploadExpireSeconds: 600
     downloadExpireSeconds: 3600
     tokenMaxSize: 10000
-    callbackUrl: upload.ngrok.xiaomiqiu.cn/pub/callback
+    callbackUrl: http://dber_upload.ngrok.xiaomiqiu.cn/pub/callback
     auth:
-      accessKey: cdeEeDCOPy4g9xmW-DGrMvI0EZymZ324Kts9Wx6A
-      secretKey: V_fg6QV4tttDK3W0Cl4AUHcU4fsMQ4DwpGSsQBzg
-    bucket:
-      imge: p31z7ux9b.bkt.clouddn.com
-      imgePrivate: p320trfbx.bkt.clouddn.com
+      accessKey: pRn3RLJX5dKttaGTICC4KHjxevhxDVwIgNTLF3a2
+      secretKey: A5UDH6CUWJhwOkQJSZwQk-n5y9LOhEyjWl9iR9vU
+    buckets:
+      pub:
+        name: dev-imge
+        url: //p31z7ux9b.bkt.clouddn.com
+        upUrl: //upload-z2.qiniup.com
+      pri:
+        name: dev-imge-
+        url: //p320trfbx.bkt.clouddn.com
+        upUrl: //upload-z2.qiniup.com
   auth:
 #   授予权限
     grant:

@@ -2,6 +2,9 @@ package com.dber.upload.api;
 
 import com.dber.base.enums.ImgType;
 import com.dber.base.result.Result;
+import com.dber.upload.api.entity.UploadToken;
+
+import java.util.Collection;
 
 /**
  * <li>修改记录: ...</li>
@@ -15,18 +18,40 @@ import com.dber.base.result.Result;
 public interface IUploadClient {
     /**
      * 获取上传token
+     * 请务必进行业务数据权限验证
      *
      * @param imgType
      * @param bsId
      * @return
      */
-    Result<String> getUploadToken(ImgType imgType, long bsId);
+    Result<UploadToken> getUploadToken(ImgType imgType, long bsId);
 
     /**
-     * 获取私有空间下载token
+     * 覆盖上传token
+     * 请务必进行业务数据权限验证
      *
-     * @param baseUrl
+     * @param imgType
+     * @param bsId
      * @return
      */
-    Result<String> getDownloadToken(String baseUrl);
+    Result<UploadToken> getCoverUploadToken(ImgType imgType, long bsId, long id);
+
+    /**
+     * 请务必进行业务数据权限验证
+     * 获取私有空间下载地址
+     *
+     * @param imgType
+     * @param bsId
+     * @return
+     */
+    Result<Collection<String>> getDownloadUrls(ImgType imgType, long bsId);
+
+    /**
+     * 删除数据
+     * 请自行校验数据权限
+     * 参数会用于校验数据准确性
+     *
+     * @return
+     */
+    Result<Integer> del(long id, ImgType type, long bsId);
 }

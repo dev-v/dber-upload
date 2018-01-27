@@ -1,8 +1,8 @@
 package com.dber.upload.server.qiniu;
 
+import com.dber.upload.api.entity.UploadToken;
 import com.dber.upload.server.config.UploadConfig;
 import com.dber.upload.server.valid.AbstractUploader;
-import com.dber.upload.server.valid.IIDGenerator;
 import com.qiniu.util.Auth;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.UnsupportedEncodingException;
 
 /**
  * <li>修改记录: ...</li>
@@ -31,9 +30,6 @@ public class QiniuUploader extends AbstractUploader {
     @Autowired
     private UploadConfig uploadConfig;
 
-    @Autowired
-    private IIDGenerator iidGenerator;
-
     private Auth auth;
 
     @PostConstruct
@@ -43,18 +39,21 @@ public class QiniuUploader extends AbstractUploader {
     }
 
     @Override
-    public String getRealUploadToken(String bucket) {
-        return auth.uploadToken(bucket, String.valueOf(iidGenerator.next()),
-                uploadConfig.getUploadExpireSeconds(), PUT_POLICY_RETURN_BODY, true);
+    public UploadToken getRealUploadToken(String bucket, long key) {
+        UploadToken token = new UploadToken();
+        String _key = String.valueOf(key);
+        token.setKey(_key);
+        token.setToken(auth.uploadToken(bucket, _key, uploadConfig.getUploadExpireSeconds(), PUT_POLICY_CALL_BACK, false));
+        return token;
     }
 
     @Override
-    public String getDownloadToken(String baseUrl) {
+    public String getDownloadUrl(String baseUrl) {
         return auth.privateDownloadUrl(baseUrl, uploadConfig.getDownloadExpireSeconds());
     }
 
     @Override
-    protected boolean realCallback(String authorization, String url, String contentType, byte[] content) {
-        return auth.isValidCallback(authorization, url, content, contentType);
+    protected boolean realCallback(String authorization, String url, String contentType, String content) {
+        return auth.isValidCallback(authorization, url, content.getBytes(), contentType);
     }
 }

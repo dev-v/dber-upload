@@ -1,13 +1,15 @@
 package com.dber.upload.web.api;
 
 import com.dber.base.IClient;
-import com.dber.base.enums.DberSystem;
 import com.dber.base.enums.ImgType;
-import com.dber.base.util.BaseKeyUtil;
-import com.dber.base.web.vo.Response;
+import com.dber.base.entity.Response;
+import com.dber.upload.api.entity.UploadToken;
 import com.dber.upload.server.Uploader;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * <li>修改记录: ...</li>
@@ -27,22 +29,25 @@ public class UploadApiController implements IClient {
     @Autowired
     private Uploader uploader;
 
-    /**
-     * @param system 客户端系统
-     * @return
-     */
-    @RequestMapping("test")
-    public Response test(@RequestParam(BaseKeyUtil.auth_params_system) DberSystem system) {
-        return Response.newSuccessResponse(system);
+    @RequestMapping(value = "downloadUrls/{type}/{bsId}", method = RequestMethod.GET)
+    public Response<String[]> downloadToken(@PathVariable("type") int type, @PathVariable("bsId") long bsId) {
+        return Response.newSuccessResponse(uploader.getDownloadUrls(ImgType.from(type), bsId));
     }
 
-    @RequestMapping("downloadToken")
-    public Response<String> downloadToken(@ModelAttribute("baseUrl") String baseUrl) {
-        return Response.newSuccessResponse(uploader.getDownloadToken(baseUrl));
-    }
-
-    @RequestMapping("uploadToken/{type}/{bsId}")
-    public Response<String> uploadToken(@PathVariable("type") int type, @PathVariable("bsId") long bsId) {
+    @RequestMapping(value = "uploadToken/{type}/{bsId}", method = RequestMethod.GET)
+    public Response<UploadToken> uploadToken(@PathVariable("type") int type, @PathVariable("bsId") long bsId) {
         return Response.newSuccessResponse(uploader.getUploadToken(ImgType.from(type), bsId));
+    }
+
+    @RequestMapping(value = "coverToken/{type}/{bsId}/{id}", method = RequestMethod.GET)
+    public Response<UploadToken> coverToken(@PathVariable("type") int type, @PathVariable("bsId") long bsId,
+                                            @PathVariable("id") long id) {
+        return Response.newSuccessResponse(uploader.coverUploadToken(ImgType.from(type), bsId, id));
+    }
+
+    @RequestMapping(value = "del/{type}/{bsId}/{id}", method = RequestMethod.GET)
+    public Response<Integer> uploadToken(@PathVariable("type") int type, @PathVariable("bsId") long bsId,
+                                         @PathVariable("id") long id) {
+        return Response.newSuccessResponse(uploader.del(ImgType.from(type), bsId, id));
     }
 }

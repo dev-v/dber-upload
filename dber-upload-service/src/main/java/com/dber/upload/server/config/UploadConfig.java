@@ -27,12 +27,27 @@ public class UploadConfig {
 
     private String callbackUrl;
 
-    private Bucket bucket = new Bucket();
+
+    private Buckets buckets = new Buckets();
+
+    @Data
+    public static final class Buckets {
+        private Bucket pub = new Bucket();
+        private Bucket pri = new Bucket();
+    }
 
     @Data
     public static final class Bucket {
-        private String imge;
-        private String imgePrivate;
+        private String name;
+        /**
+         * 下载地址
+         */
+        private String url;
+
+        /**
+         * 上传地址
+         */
+        private String upUrl;
     }
 
     @Data

@@ -45,6 +45,6 @@ public class IDGeneratorService implements IIDGenerator {
         Long errorServiceId = errorService.getMaxId();
         errorServiceId = errorServiceId == null ? serviceId : errorServiceId;
 
-        this.current = new AtomicLong(serviceId > errorServiceId ? serviceId : errorServiceId);
+        this.current = new AtomicLong((serviceId > errorServiceId ? serviceId : errorServiceId) + 1);
     }
 }

@@ -7,18 +7,22 @@ import com.dber.base.enums.ImgStatus;
 import com.dber.base.enums.ImgType;
 import com.dber.upload.api.entity.Dfile;
 import com.dber.upload.api.entity.DfileError;
+import com.dber.upload.api.entity.UploadToken;
 import com.dber.upload.server.UploadResult;
 import com.dber.upload.server.Uploader;
 import com.dber.upload.server.config.UploadConfig;
 import com.dber.upload.service.IDfileErrorService;
 import com.dber.upload.service.IDfileService;
 import com.dber.util.ExpireMap;
+import com.dber.util.Util;
 import com.qiniu.util.StringMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <li>修改记录: ...</li>
@@ -30,7 +34,6 @@ import javax.annotation.PostConstruct;
  * @since 2018/1/24
  */
 public abstract class AbstractUploader implements Uploader {
-    ExpireMap<String, Img> expireMap;
 
     private static final Log log = LogFactory.getLog(AbstractUploader.class);
 
@@ -46,23 +49,76 @@ public abstract class AbstractUploader implements Uploader {
     @Autowired
     private UploadConfig uploadConfig;
 
+    @Autowired
+    private IIDGenerator iidGenerator;
+
+    ExpireMap<String, Img> expireMap;
+
+    UploadConfig.Bucket pubBucket;
+
+    UploadConfig.Bucket priBucket;
+
     @Override
-    public String getUploadToken(ImgType imgType, long bsId) {
+    public UploadToken getUploadToken(ImgType imgType, long bsId) {
         attackValid.isAttack(imgType.getValue(), bsId);
-        String bucket = imgType.isPublic() ? uploadConfig.getBucket().getImge() : uploadConfig.getBucket().getImgePrivate();
-        String token = getRealUploadToken(bucket);
-        expireMap.put(token, new Img(imgType.getValue(), bsId));
-        return token;
+        Dfile dfile = new Dfile();
+        dfile.setType(imgType.getValue());
+        dfile.setBsId(bsId);
+        dfile.setStatus(ImgStatus.AVAILABLE.getValue());
+        if (fileService.count(dfile) < imgType.getMaxCount()) {
+            String bucket = imgType.isPublic() ? pubBucket.getName() : priBucket.getName();
+            UploadToken token = getRealUploadToken(bucket, iidGenerator.next());
+            expireMap.put(token.getToken(), new Img(imgType.getValue(), bsId));
+            return token;
+        } else {
+            throw new IllegalStateException("该项最多只能上传【" + imgType.getMaxCount() + "】张图片，您可以用新图片替换之前上传的图片！");
+        }
     }
 
     @Override
-    public String getDownloadUrl() {
-        return uploadConfig.getBucket().getImge();
+    public UploadToken coverUploadToken(ImgType imgType, long bsId, long id) {
+        attackValid.isAttack(imgType.getValue(), bsId);
+        Dfile dfile = validSame(imgType, bsId, id);
+        if (dfile != null) {
+            dfile.setStatus(ImgStatus.COVER.getValue());
+            fileService.save(dfile);
+            String bucket = imgType.isPublic() ? pubBucket.getName() : priBucket.getName();
+            UploadToken token = getRealUploadToken(bucket, iidGenerator.next());
+            expireMap.put(token.getToken(), new Img(imgType.getValue(), bsId));
+            return token;
+        }
+        return null;
     }
 
     @Override
-    public String getPrivateDownloadUrl() {
-        return uploadConfig.getBucket().getImgePrivate();
+    public int del(ImgType imgType, long bsId, long id) {
+        Dfile dfile = validSame(imgType, bsId, id);
+        int count = 0;
+        if (dfile != null) {
+            dfile.setStatus(ImgStatus.DELETED.getValue());
+            count = fileService.save(dfile);
+        }
+        return count;
+    }
+
+    @Override
+    public String getUploadUrl(ImgType imgType) {
+        return imgType.isPublic() ? pubBucket.getUpUrl() : priBucket.getUpUrl();
+    }
+
+    @Override
+    public String[] getDownloadUrls(ImgType imgType, long bsId) {
+        long[] keys = getKeys(imgType, bsId);
+        String[] urls = new String[keys.length];
+        for (int i = 0, len = keys.length; i < len; i++) {
+            urls[i] = getDownloadUrl(priBucket.getUrl() + '/' + keys[i]);
+        }
+        return urls;
+    }
+
+    @Override
+    public String getDownloadUrl(ImgType imgType) {
+        return imgType.isPublic() ? pubBucket.getUrl() : priBucket.getUrl();
     }
 
     @Override
@@ -76,30 +132,38 @@ public abstract class AbstractUploader implements Uploader {
     }
 
     @Override
-    public void callback(String authorization, String contentType, byte[] content) {
+    public String callback(String authorization, String contentType, String content) {
         if (realCallback(authorization, uploadConfig.getCallbackUrl(), contentType, content)) {
             UploadResult result = JSON.parseObject(content, UploadResult.class);
             String token = result.getToken();
-            if (token == null) {//不回传token
-                fileErrorService.save(result.toErrorFile(ImgErrorType.NOTOKEN));
-                return;
+            result.setToken(null);
+            if (Util.isBlank(token)) {//不回传token
+//            fileErrorService.save(result.toErrorFile(ImgErrorType.NOTOKEN));
+                return null;
             }
-            Img img = expireMap.get(result.getToken());
+
+            Img img = expireMap.get(token);
             if (img == null) {//超时或者超容量后丢失 记录异常信息
                 fileErrorService.save(result.toErrorFile(ImgErrorType.EXPIRE));
-                return;
+                return null;
             }
             if (img.getBsId() == result.getBsId() && img.getType() == result.getType()) {//业务验证成功
                 fileService.save(result.toFile());
+                ImgType type = ImgType.from(result.getType());
+                String url = getDownloadUrl(type) + '/' + result.getKey();
+                Map<String, String> returnBody = new HashMap<>();
+                returnBody.put("url", type.isPublic() ? url : getDownloadUrl(url));
+                return JSON.toJSONString(returnBody);
             } else {//业务验证失败 发现滥用或攻击行为 记录业务ID并拒绝上传token申请
                 DfileError error = result.toErrorFile(ImgErrorType.ATTACK);
                 error.setErrorType(img.getType());
                 error.setBsId(img.getBsId());
                 fileErrorService.save(error);
                 attackValid.add(img.getType(), img.getBsId());
-                return;
+                return null;
             }
         }
+        return null;
     }
 
     /**
@@ -108,45 +172,62 @@ public abstract class AbstractUploader implements Uploader {
      * @param authorization
      * @param url
      * @param contentType
-     * @param content
      * @return
      */
-    protected abstract boolean realCallback(String authorization, String url, String contentType, byte[] content);
+    protected abstract boolean realCallback(String authorization, String url, String contentType, String content);
 
     @Override
-    public long[] getKeys(int type, long bsId) {
+    public long[] getKeys(ImgType imgType, long bsId) {
         Dfile dfile = new Dfile();
         dfile.setBsId(bsId);
-        dfile.setType(type);
+        dfile.setType(imgType.getValue());
         dfile.setStatus(ImgStatus.AVAILABLE.getValue());
         return fileService.getIds(dfile);
     }
 
-    public abstract String getRealUploadToken(String bucket);
-
-    protected static final StringMap PUT_POLICY_RETURN_BODY = new StringMap();
+    public abstract UploadToken getRealUploadToken(String bucket, long key);
 
     protected static final StringMap PUT_POLICY_CALL_BACK = new StringMap();
 
+    /**
+     * 验证是否有对应一致的数据
+     * 有返回对应数据
+     * 否则返回null
+     *
+     * @return
+     */
+    private Dfile validSame(ImgType imgType, long bsId, long id) {
+        Dfile dfile = new Dfile();
+        dfile.setId(id);
+        dfile.setType(imgType.getValue());
+        dfile.setBsId(bsId);
+        dfile = fileService.queryOne(dfile);
+        return dfile;
+    }
+
     @PostConstruct
     private void init() {
-        StringMap RESPONSE_BODY = new StringMap();
-        RESPONSE_BODY.put("key", "$(key)");
-        RESPONSE_BODY.put("key", "$(token)");
-        RESPONSE_BODY.put("key", "$(endUser)");
-        RESPONSE_BODY.put("hash", "$(etag)");
-        RESPONSE_BODY.put("bucket", "$(bucket)");
-        RESPONSE_BODY.put("fname", "$(fname)");
-        RESPONSE_BODY.put("fsize", "$(fsize)");
-        RESPONSE_BODY.put("type", "$(x:type)");
-        RESPONSE_BODY.put("bsId", "$(x:bsId)");
+        Map<String, String> callbackBody = new HashMap<>();
+        callbackBody.put("key", "$(key)");
+        callbackBody.put("endUser", "$(endUser)");
+        callbackBody.put("hash", "$(etag)");
+        callbackBody.put("bucket", "$(bucket)");
+        callbackBody.put("fname", "$(fname)");
+        callbackBody.put("fsize", "$(fsize)");
+        callbackBody.put("token", "$(x:token)");
+        callbackBody.put("type", "$(x:type)");
+        callbackBody.put("bsId", "$(x:bsId)");
+        PUT_POLICY_CALL_BACK.put("callbackBody", JSON.toJSONString(callbackBody));
 
-        PUT_POLICY_RETURN_BODY.put("returnBody", RESPONSE_BODY);
+        Map<String, String> returnBody = new HashMap<>();
+        returnBody.put("url", "$(x:url)");
+        PUT_POLICY_CALL_BACK.put("url", JSON.toJSONString(returnBody));
 
-        PUT_POLICY_CALL_BACK.put("callbackBody", RESPONSE_BODY);
         PUT_POLICY_CALL_BACK.put("callbackUrl", uploadConfig.getCallbackUrl());
         PUT_POLICY_CALL_BACK.put("callbackBodyType", "application/json");
 
+        pubBucket = uploadConfig.getBuckets().getPub();
+        priBucket = uploadConfig.getBuckets().getPri();
         this.expireMap = new ExpireMap<>(uploadConfig.getTokenMaxSize(), uploadConfig.getUploadExpireSeconds() + 600);
     }
 }

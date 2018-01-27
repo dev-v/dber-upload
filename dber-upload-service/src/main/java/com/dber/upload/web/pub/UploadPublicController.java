@@ -1,17 +1,16 @@
 package com.dber.upload.web.pub;
 
-import com.dber.base.web.vo.Response;
+import com.dber.base.enums.ImgType;
+import com.dber.base.entity.Response;
 import com.dber.upload.server.Uploader;
+import com.dber.util.Util;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * <li>修改记录: ...</li>
@@ -32,38 +31,32 @@ public class UploadPublicController {
     private Uploader uploader;
 
     @RequestMapping("callback")
-    public void callback(HttpServletRequest request) throws IOException {
-        byte[] content = null;
-
-        try (InputStream in = request.getInputStream()) {
-            content = new byte[in.available()];
-            in.read(content);
-            in.close();
+    public String callback(HttpServletRequest request, @RequestBody String content) throws IOException {
+        if (Util.isBlank(content)) {
+            return content;
         }
 
-        if (content == null) {
-            return;
-        }
-
-        uploader.callback(
-                request.getHeader("Authorization"),
-                request.getContentType(),
-                content);
+        return uploader.callback(request.getHeader("Authorization"), request.getContentType(), content);
     }
 
-    @RequestMapping("keys/{type}/{bsId}")
+    @RequestMapping(value = "keys/{type}/{bsId}", method = RequestMethod.GET)
     public Response<long[]> keys(@PathVariable("type") int type, @PathVariable("bsId") long bsId) {
-        return Response.newSuccessResponse(uploader.getKeys(type, bsId));
+        return Response.newSuccessResponse(uploader.getKeys(ImgType.from(type), bsId));
     }
 
-
-    @RequestMapping("url")
-    public Response<String> getDownloadUrl() {
-        return Response.newSuccessResponse(uploader.getDownloadUrl());
+    /**
+     * 公共空间地址
+     * 私有空间地址只允许通过imgType+bsId的形式获取
+     *
+     * @return
+     */
+    @RequestMapping(value = "downloadUrl/{imgType}", method = RequestMethod.GET)
+    public Response<String> getDownloadUrl(@PathVariable("imgType") int imgType) {
+        return Response.newSuccessResponse(uploader.getDownloadUrl(ImgType.from(imgType)));
     }
 
-    @RequestMapping("_url")
-    public Response<String> getPrivateDownloadUrl() {
-        return Response.newSuccessResponse(uploader.getPrivateDownloadUrl());
+    @RequestMapping(value = "uploadUrl/{imgType}", method = RequestMethod.GET)
+    public Response<String> getBucketUploadUrl(@PathVariable("imgType") int imgType) {
+        return Response.newSuccessResponse(uploader.getUploadUrl(ImgType.from(imgType)));
     }
 }
