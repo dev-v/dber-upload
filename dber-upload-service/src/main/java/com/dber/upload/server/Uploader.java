@@ -1,6 +1,7 @@
 package com.dber.upload.server;
 
 import com.dber.base.enums.ImgType;
+import com.dber.upload.api.entity.DownloadUrlRequest;
 import com.dber.upload.api.entity.UploadToken;
 
 /**
@@ -58,11 +59,9 @@ public interface Uploader {
     /**
      * 获取下载私有空间数据的地址
      *
-     * @param imgType
-     * @param bsId
      * @return
      */
-    String[] getDownloadUrls(ImgType imgType, long bsId);
+    String[] getDownloadUrls(DownloadUrlRequest request);
 
     /**
      * 获取文件key集合

@@ -1,8 +1,9 @@
 package com.dber.upload.web.api;
 
 import com.dber.base.IClient;
-import com.dber.base.enums.ImgType;
 import com.dber.base.entity.Response;
+import com.dber.base.enums.ImgType;
+import com.dber.upload.api.entity.DownloadUrlRequest;
 import com.dber.upload.api.entity.UploadToken;
 import com.dber.upload.server.Uploader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +30,9 @@ public class UploadApiController implements IClient {
     @Autowired
     private Uploader uploader;
 
-    @RequestMapping(value = "downloadUrls/{type}/{bsId}", method = RequestMethod.GET)
-    public Response<String[]> downloadToken(@PathVariable("type") int type, @PathVariable("bsId") long bsId) {
-        return Response.newSuccessResponse(uploader.getDownloadUrls(ImgType.from(type), bsId));
+    @RequestMapping(value = "downloadUrls", method = RequestMethod.POST)
+    public Response<String[]> downloadUrls(DownloadUrlRequest request) {
+        return Response.newSuccessResponse(uploader.getDownloadUrls(request));
     }
 
     @RequestMapping(value = "uploadToken/{type}/{bsId}", method = RequestMethod.GET)

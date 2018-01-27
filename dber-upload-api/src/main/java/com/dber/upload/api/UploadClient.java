@@ -5,6 +5,7 @@ import com.dber.base.enums.DberSystem;
 import com.dber.base.enums.ImgType;
 import com.dber.base.result.Result;
 import com.dber.base.util.ResultTypeHelper;
+import com.dber.upload.api.entity.DownloadUrlRequest;
 import com.dber.upload.api.entity.UploadToken;
 import org.springframework.stereotype.Service;
 
@@ -38,14 +39,14 @@ public class UploadClient extends AbstractClient implements IUploadClient {
     }
 
     @Override
-    public Result<Collection<String>> getDownloadUrls(ImgType imgType, long bsId) {
-        return clientUtil.get("/api/downloadUrls/" + imgType.getValue() + '/' + bsId,
-                ResultTypeHelper.getCollectionType(String.class));
+    public Result<Collection<String>> getDownloadUrls(DownloadUrlRequest request) {
+        return clientUtil.post("/api/downloadUrls", request, ResultTypeHelper.getCollectionType(String.class));
     }
 
     @Override
     public Result<Integer> del(long id, ImgType type, long bsId) {
-        return clientUtil.get("/api/del/" + type.getValue() + '/' + bsId + '/' + id,
+        Result result =clientUtil.get("/api/del/" + type.getValue() + '/' + bsId + '/' + id,
                 ResultTypeHelper.getType(Integer.class));
+        return result;
     }
 }

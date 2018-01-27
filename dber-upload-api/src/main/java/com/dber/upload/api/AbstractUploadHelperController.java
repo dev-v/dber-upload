@@ -3,10 +3,10 @@ package com.dber.upload.api;
 import com.dber.base.entity.Response;
 import com.dber.base.enums.ImgType;
 import com.dber.base.login.LoginCheckController;
+import com.dber.upload.api.entity.DownloadUrlRequest;
 import com.dber.upload.api.entity.UploadToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -72,14 +72,12 @@ public abstract class AbstractUploadHelperController extends LoginCheckControlle
      * 获取私有空间下载地址
      * 如果不需要该服务请在子类中覆盖该方法实现
      *
-     * @param imgType
-     * @param bsId
      * @return
      */
-    @RequestMapping(value = "downloadUrls/{imgType}/{bsId}", method = RequestMethod.GET)
-    public Response<Collection<String>> downloadUrls(@PathVariable("imgType") int imgType, @PathVariable("bsId") long bsId) {
-        if (validAuth(getAccountId(), imgType, bsId)) {
-            return Response.newSuccessResponse(uploadClient.getDownloadUrls(ImgType.from(imgType), bsId).getResponse());
+    @RequestMapping(value = "downloadUrls")
+    public Response<Collection<String>> downloadUrls(DownloadUrlRequest request) {
+        if (validAuth(getAccountId(), request.getType(), request.getBsId())) {
+            return Response.newSuccessResponse(uploadClient.getDownloadUrls(request).getResponse());
         }
         return null;
     }

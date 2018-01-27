@@ -2,6 +2,7 @@ package com.dber.upload.api;
 
 import com.dber.base.enums.ImgType;
 import com.dber.base.result.Result;
+import com.dber.upload.api.entity.DownloadUrlRequest;
 import com.dber.upload.api.entity.UploadToken;
 
 import java.util.Collection;
@@ -40,11 +41,9 @@ public interface IUploadClient {
      * 请务必进行业务数据权限验证
      * 获取私有空间下载地址
      *
-     * @param imgType
-     * @param bsId
      * @return
      */
-    Result<Collection<String>> getDownloadUrls(ImgType imgType, long bsId);
+    Result<Collection<String>> getDownloadUrls(DownloadUrlRequest request);
 
     /**
      * 删除数据

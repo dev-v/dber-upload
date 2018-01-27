@@ -7,6 +7,7 @@ import com.dber.base.enums.ImgStatus;
 import com.dber.base.enums.ImgType;
 import com.dber.upload.api.entity.Dfile;
 import com.dber.upload.api.entity.DfileError;
+import com.dber.upload.api.entity.DownloadUrlRequest;
 import com.dber.upload.api.entity.UploadToken;
 import com.dber.upload.server.UploadResult;
 import com.dber.upload.server.Uploader;
@@ -107,13 +108,21 @@ public abstract class AbstractUploader implements Uploader {
     }
 
     @Override
-    public String[] getDownloadUrls(ImgType imgType, long bsId) {
-        long[] keys = getKeys(imgType, bsId);
+    public String[] getDownloadUrls(DownloadUrlRequest request) {
+        ImgType type = ImgType.from(request.getType());
+        long[] keys = getKeys(type, request.getBsId());
         String[] urls = new String[keys.length];
         for (int i = 0, len = keys.length; i < len; i++) {
-            urls[i] = getDownloadUrl(priBucket.getUrl() + '/' + keys[i]);
+            urls[i] = getUrl(type, keys[i], request.getProtocol(), request.getStyle());
         }
         return urls;
+    }
+
+    private String getUrl(ImgType type, long key, String protocol, String style) {
+        style = Util.isBlank(style) ? "" : '-' + style;
+        String url = protocol + getDownloadUrl(type) + '/' + key + style;
+        return type.isPublic() ? url : getDownloadUrl(url);
+
     }
 
     @Override
@@ -149,10 +158,10 @@ public abstract class AbstractUploader implements Uploader {
             }
             if (img.getBsId() == result.getBsId() && img.getType() == result.getType()) {//业务验证成功
                 fileService.save(result.toFile());
-                ImgType type = ImgType.from(result.getType());
-                String url = getDownloadUrl(type) + '/' + result.getKey();
+
                 Map<String, String> returnBody = new HashMap<>();
-                returnBody.put("url", type.isPublic() ? url : getDownloadUrl(url));
+                returnBody.put("url", getUrl(ImgType.from(result.getType()), result.getKey(), result.getProtocol(), result.getStyle()));
+                
                 return JSON.toJSONString(returnBody);
             } else {//业务验证失败 发现滥用或攻击行为 记录业务ID并拒绝上传token申请
                 DfileError error = result.toErrorFile(ImgErrorType.ATTACK);
@@ -217,6 +226,8 @@ public abstract class AbstractUploader implements Uploader {
         callbackBody.put("token", "$(x:token)");
         callbackBody.put("type", "$(x:type)");
         callbackBody.put("bsId", "$(x:bsId)");
+        callbackBody.put("protocol", "$(x:protocol)");
+        callbackBody.put("style", "$(x:style)");
         PUT_POLICY_CALL_BACK.put("callbackBody", JSON.toJSONString(callbackBody));
 
         Map<String, String> returnBody = new HashMap<>();

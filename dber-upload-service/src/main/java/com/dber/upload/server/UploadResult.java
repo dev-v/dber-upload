@@ -18,11 +18,13 @@ import lombok.Data;
 public class UploadResult {
     private String token;
     private String hash;
-    private String key;
+    private long key;
     private String bucket;
     private int fsize;
     private String endUser;
     private String fname;
+    private String protocol;
+    private String style;
     /**
      * 业务类型
      */
@@ -35,7 +37,7 @@ public class UploadResult {
 
     public Dfile toFile() {
         Dfile dfile = new Dfile();
-        dfile.setId(Long.parseLong(this.getKey()));
+        dfile.setId(this.getKey());
         dfile.setBsId(this.getBsId());
         dfile.setSfname(this.getFname());
         dfile.setType(this.getType());
@@ -44,7 +46,7 @@ public class UploadResult {
 
     public DfileError toErrorFile(ImgErrorType errorType) {
         DfileError dfile = new DfileError();
-        dfile.setId(Long.parseLong(this.getKey()));
+        dfile.setId(this.getKey());
         dfile.setBsId(this.getBsId());
         dfile.setSfname(this.getFname());
         dfile.setType(this.getType());
