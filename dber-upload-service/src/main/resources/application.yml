@@ -56,7 +56,7 @@ dber:
     database:
       host: 192.168.120.3
       port: 3306
-      database: dber_plat
+      database: dber_upload
       username: root
       password: 123456
       parameters: characterEncoding=utf8&rewriteBatchedStatements=true&autoReconnect=true

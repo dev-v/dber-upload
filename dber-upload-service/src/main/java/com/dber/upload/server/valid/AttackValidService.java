@@ -2,7 +2,7 @@ package com.dber.upload.server.valid;
 
 import com.dber.base.enums.ImgErrorStatus;
 import com.dber.base.enums.ImgErrorType;
-import com.dber.base.mybatis.plugin.pagination.page.Page;
+import com.dber.base.result.Page;
 import com.dber.upload.api.entity.DfileError;
 import com.dber.upload.service.IDfileErrorService;
 import org.springframework.beans.factory.annotation.Autowired;
