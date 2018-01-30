@@ -6,7 +6,7 @@ import com.dber.base.login.LoginCheckController;
 import com.dber.upload.api.entity.DownloadUrlRequest;
 import com.dber.upload.api.entity.UploadToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.context.annotation.Import;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,6 +28,7 @@ import java.util.Collection;
  * @since 2018/1/27
  */
 @RequestMapping("/token/")
+@Import({UploadClient.class})
 public abstract class AbstractUploadHelperController extends LoginCheckController {
 
     @Autowired
