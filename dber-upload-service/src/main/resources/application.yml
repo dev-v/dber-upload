@@ -12,7 +12,7 @@ server:
 spring:
   profiles: dev
   redis:
-    host: 192.168.120.3
+    host: localhost
     port: 6379
     database: 0
     pool:
@@ -23,7 +23,7 @@ dber:
     uploadExpireSeconds: 600
     downloadExpireSeconds: 3600
     tokenMaxSize: 10000
-    callbackUrl: http://dber_upload.ngrok.xiaomiqiu.cn/pub/callback
+    callbackUrl: http://c1694f29.ngrok.io/pub/callback
     auth:
       accessKey: pRn3RLJX5dKttaGTICC4KHjxevhxDVwIgNTLF3a2
       secretKey: A5UDH6CUWJhwOkQJSZwQk-n5y9LOhEyjWl9iR9vU
@@ -54,11 +54,11 @@ dber:
   service:
     name: upload
     database:
-      host: 192.168.120.3
+      host: localhost
       port: 3306
       database: dber_upload
       username: root
-      password: 123456
+      password: cwl123
       parameters: characterEncoding=utf8&rewriteBatchedStatements=true&autoReconnect=true
       initialSize: 1
       maxActive: 2
