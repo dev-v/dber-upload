@@ -8,12 +8,14 @@ import com.dber.upload.api.entity.Dfile;
  * <li>修改记录: ...</li>
  * <li>内容摘要: ...</li>
  * <li>其他说明: ...</li>
- * 
+ *
+ * @author dev-v
  * @version 1.0
  * @since 2017年12月20日
- * @author dev-v
  */
 public interface IDfileService extends IService<Dfile> {
 
-    Long getMaxId();
+  Long getMaxId();
+
+  long[] getIdsByBsIds(int type, long[] bsIds);
 }

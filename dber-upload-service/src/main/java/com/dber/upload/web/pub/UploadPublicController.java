@@ -25,38 +25,43 @@ import java.io.IOException;
 @RequestMapping("/pub/")
 public class UploadPublicController {
 
-    private static final Log log = LogFactory.getLog(UploadPublicController.class);
+  private static final Log log = LogFactory.getLog(UploadPublicController.class);
 
-    @Autowired
-    private Uploader uploader;
+  @Autowired
+  private Uploader uploader;
 
-    @RequestMapping("callback")
-    public String callback(HttpServletRequest request, @RequestBody String content) throws IOException {
-        if (Util.isBlank(content)) {
-            return content;
-        }
-
-        return uploader.callback(request.getHeader("Authorization"), request.getContentType(), content);
+  @RequestMapping("callback")
+  public String callback(HttpServletRequest request, @RequestBody String content) throws IOException {
+    if (Util.isBlank(content)) {
+      return content;
     }
 
-    @RequestMapping(value = "keys/{type}/{bsId}", method = RequestMethod.GET)
-    public Response<long[]> keys(@PathVariable("type") int type, @PathVariable("bsId") long bsId) {
-        return Response.newSuccessResponse(uploader.getKeys(ImgType.from(type), bsId));
-    }
+    return uploader.callback(request.getHeader("Authorization"), request.getContentType(), content);
+  }
 
-    /**
-     * 公共空间地址
-     * 私有空间地址只允许通过imgType+bsId的形式获取
-     *
-     * @return
-     */
-    @RequestMapping(value = "downloadUrl/{imgType}", method = RequestMethod.GET)
-    public Response<String> getDownloadUrl(@PathVariable("imgType") int imgType) {
-        return Response.newSuccessResponse(uploader.getDownloadUrl(ImgType.from(imgType)));
-    }
+  @RequestMapping(value = "keys/{type}/{bsId}", method = RequestMethod.GET)
+  public Response<long[]> keys(@PathVariable("type") int type, @PathVariable("bsId") long bsId) {
+    return Response.newSuccessResponse(uploader.getKeys(ImgType.from(type), bsId));
+  }
 
-    @RequestMapping(value = "uploadUrl/{imgType}", method = RequestMethod.GET)
-    public Response<String> getBucketUploadUrl(@PathVariable("imgType") int imgType) {
-        return Response.newSuccessResponse(uploader.getUploadUrl(ImgType.from(imgType)));
-    }
+  @RequestMapping(value = "keys/{type}", method = RequestMethod.GET)
+  public Response<long[]> keys(@PathVariable("type") int type, long[] bsIds) {
+    return Response.newSuccessResponse(uploader.getKeys(ImgType.from(type), bsIds));
+  }
+
+  /**
+   * 公共空间地址
+   * 私有空间地址只允许通过imgType+bsId的形式获取
+   *
+   * @return
+   */
+  @RequestMapping(value = "downloadUrl/{imgType}", method = RequestMethod.GET)
+  public Response<String> getDownloadUrl(@PathVariable("imgType") int imgType) {
+    return Response.newSuccessResponse(uploader.getDownloadUrl(ImgType.from(imgType)));
+  }
+
+  @RequestMapping(value = "uploadUrl/{imgType}", method = RequestMethod.GET)
+  public Response<String> getBucketUploadUrl(@PathVariable("imgType") int imgType) {
+    return Response.newSuccessResponse(uploader.getUploadUrl(ImgType.from(imgType)));
+  }
 }

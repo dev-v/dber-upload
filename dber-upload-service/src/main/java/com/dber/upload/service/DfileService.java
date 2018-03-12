@@ -20,16 +20,21 @@ import org.springframework.stereotype.Service;
 @Service
 public class DfileService extends AbstractService<Dfile> implements IDfileService {
 
-    @Autowired
-    private IDfileMapper mapper;
+  @Autowired
+  private IDfileMapper mapper;
 
-    @Override
-    protected IMapper<Dfile> getMapper() {
-        return this.mapper;
-    }
+  @Override
+  protected IMapper<Dfile> getMapper() {
+    return this.mapper;
+  }
 
-    @Override
-    public Long getMaxId() {
-        return mapper.getMaxId();
-    }
+  @Override
+  public Long getMaxId() {
+    return mapper.getMaxId();
+  }
+
+  @Override
+  public long[] getIdsByBsIds(int type, long[] bsIds) {
+    return mapper.getIdsByBsIds(type, bsIds);
+  }
 }
